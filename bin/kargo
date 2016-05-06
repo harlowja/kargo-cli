@@ -29,7 +29,7 @@ from kargo.common import clone_kargo_git_repo, read_password
 from kargo.configure import Config
 from kargo.inventory import CfgInventory
 from kargo.deploy import RunPlaybook
-from kargo.cloud import AWS, GCE
+from kargo.cloud import AWS, GCE, OpenStack
 display = Display()
 
 
@@ -53,6 +53,14 @@ def gce(options):
     G.gen_gce_playbook()
     G.create_instances()
     G.write_inventory()
+
+
+def ostack(options):
+    clone_kargo_git_repo(options)
+    OS = OpenStack(options)
+    OS.gen_os_playbook()
+    OS.create_instances()
+    OS.write_inventory()
 
 
 def deploy(options):
@@ -143,6 +151,26 @@ if __name__ == '__main__':
         help='Number of nodes', required=True
     )
     aws_parser.set_defaults(func=aws)
+
+    # openstack
+    os_parser = subparsers.add_parser(
+        'openstack', parents=[parent_parser, firststep_parser],
+         help='Create OpenStack machines and generate inventory'
+    )
+    os_parser.add_argument('--image', dest='image', help='Glance image')
+    os_parser.add_argument(
+        '--project', dest='project_id', help='OpenStack project/tenant ID'
+    )
+    os_parser.add_argument(
+        '--type', dest='flavor_type', help='OpenStack flavor'
+    )
+    os_parser.add_argument(
+        '--instances', dest='count', type=int,
+        help='Number of nodes', required=True
+    )
+    os_parser.add_argument('--add', dest='add_node', action='store_true',
+        help="Add node to an existing cluster")
+    os_parser.set_defaults(func=ostack)
 
     # gce
     gce_parser = subparsers.add_parser(

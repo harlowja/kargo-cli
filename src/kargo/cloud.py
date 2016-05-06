@@ -131,6 +131,12 @@ class Cloud(object):
             sys.exit(1)
 
 
+class OpenStack(Cloud):
+    def __init__(self, options):
+        Cloud.__init__(self, options, "openstack")
+        self.options = options
+
+
 class AWS(Cloud):
 
     def __init__(self, options):
