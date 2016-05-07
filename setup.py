@@ -5,12 +5,14 @@
 from setuptools import setup, find_packages
 
 requirements = [
+    'ansible',
     'requests',
     'netaddr',
     'markupsafe',
     'pyyaml',
     'boto',
-    'apache-libcloud'
+    'apache-libcloud',
+    'shade',
 ]
 
 test_requirements = [

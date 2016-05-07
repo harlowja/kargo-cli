@@ -136,6 +136,38 @@ class OpenStack(Cloud):
         Cloud.__init__(self, options, "openstack")
         self.options = options
 
+    def gen_os_playbook(self):
+        cluster_name = 'k8s-' + get_cluster_name()
+        os_instance_names = []
+        for x in range(self.options['count']):
+            if 'cluster_name' in self.options.keys():
+                os_instance_names.append(
+                    self.options['cluster_name'] + '-%s' % id_generator()
+                )
+            else:
+                os_instance_names.append(
+                    cluster_name + '-%s' % id_generator()
+                )
+        az = self.options['availability_zone']
+        for name in os_instance_names:
+            create_task = {
+                'name': "Launch compute instance %s" % (i + 1),
+                'os_server': {
+                    'flavor': self.options['flavor'],
+                    'image': self.options['image'],
+                    'name': name,
+                    'timeout': 300,
+                    'auto_ip': False,
+                    'meta': {
+                        sudo_users: "{{ users }}",
+                        login_users: "{{ users }}",
+                    },
+                }
+            }
+            if az:
+                create_task['os_server']['availability_zone'] = az
+            self.pbook_content[0]['tasks'].append(create_task)
+
 
 class AWS(Cloud):
 
