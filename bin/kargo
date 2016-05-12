@@ -165,12 +165,15 @@ if __name__ == '__main__':
         'openstack', parents=[parent_parser, firststep_parser],
          help='Create OpenStack machines and generate inventory'
     )
-    os_parser.add_argument('--image', dest='image', help='Glance image')
+    os_parser.add_argument('--image', dest='image',
+                           help='Glance image',
+                           required=True)
     os_parser.add_argument(
         '--project', dest='project_id', help='OpenStack project/tenant ID'
     )
     os_parser.add_argument(
-        '--type', dest='flavor', help='OpenStack flavor'
+        '--type', dest='flavor', help='OpenStack flavor',
+        default='m1.large',
     )
     os_parser.add_argument(
         '--instances', dest='count', type=pos_int,

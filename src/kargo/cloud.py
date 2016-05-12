@@ -25,6 +25,7 @@ Run Instances on cloud providers and generate inventory
 
 import sys
 import os
+import getpass
 import yaml
 import json
 from kargo.inventory import CfgInventory
@@ -37,6 +38,15 @@ try:
     import configparser
 except ImportError:
     import ConfigParser as configparser
+
+
+def _dump_yaml(obj, explicit_start=True, explicit_end=True):
+    return yaml.safe_dump(obj,
+                          line_break="\n",
+                          indent=4,
+                          explicit_start=explicit_start,
+                          explicit_end=explicit_end,
+                          default_flow_style=False)
 
 
 class Cloud(object):
@@ -93,7 +103,7 @@ class Cloud(object):
         '''Write the playbook for instances creation'''
         try:
             with open(self.playbook, "w") as pb:
-                pb.write(yaml.dump(self.pbook_content, default_flow_style=True))
+                pb.write(_dump_yaml(self.pbook_content))
         except IOError as e:
             display.error(
                 'Cant write the playbook %s: %s'
@@ -148,8 +158,8 @@ class OpenStack(Cloud):
                 os_instance_names.append(
                     cluster_name + '-%s' % id_generator()
                 )
-        az = self.options['availability_zone']
-        for name in os_instance_names:
+        az = self.options.get('availability_zone')
+        for i, name in enumerate(os_instance_names):
             create_task = {
                 'name': "Launch compute instance %s" % (i + 1),
                 'os_server': {
@@ -159,14 +169,17 @@ class OpenStack(Cloud):
                     'timeout': 300,
                     'auto_ip': False,
                     'meta': {
-                        sudo_users: "{{ users }}",
-                        login_users: "{{ users }}",
+                        "sudo_users": getpass.getuser(),
+                        "login_users": getpass.getuser(),
                     },
                 }
             }
             if az:
                 create_task['os_server']['availability_zone'] = az
             self.pbook_content[0]['tasks'].append(create_task)
+
+        self.write_local_inventory()
+        self.write_playbook()
 
 
 class AWS(Cloud):
